@@ -1,13 +1,16 @@
 const express = require("express");
-const  connectDB  = require("./config/db");
-const app = express();
-const PORT = process.env.PORT || 3000;
-const apiRoutes = require('./routes');
+const connectDB = require("./config/db");
+const apiRoutes = require("./routes");
 
+const app = express();
+
+// Connect to MongoDB
 connectDB();
 
-app.use('/api', apiRoutes);
+// Middleware
+app.use(express.json());
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Routes
+app.use("/api", apiRoutes);
+
+module.exports = app;
