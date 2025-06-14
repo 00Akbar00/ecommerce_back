@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const User = require("../models/user");
-const sendResponse = require("../utils/sendResponse"); // ✅ using centralized helper
+const sendResponse = require("../utils/sendResponse");
 
 exports.register = async (req, res) => {
   const errors = validationResult(req);
