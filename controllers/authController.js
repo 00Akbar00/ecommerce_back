@@ -2,10 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const User = require("../models/user");
-
-const sendResponse = (res, status, success, message, data = null) => {
-  return res.status(status).json({ success, message, data });
-};
+const sendResponse = require("../utils/sendResponse"); // ✅ using centralized helper
 
 exports.register = async (req, res) => {
   const errors = validationResult(req);
@@ -31,21 +28,22 @@ exports.register = async (req, res) => {
       password: hashedPassword,
     });
 
-    sendResponse(res, 201, true, "User registered successfully", {
+    return sendResponse(res, 201, true, "User registered successfully", {
       id: user._id,
       name: `${user.firstName} ${user.lastName}`,
       email: user.email,
     });
   } catch (error) {
     console.error("Register Error:", error);
-    sendResponse(res, 500, false, "Server error");
+    return sendResponse(res, 500, false, "Server error");
   }
 };
 
 exports.login = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return sendResponse(res, 400, false, "Validation failed", errors.array());
+    const errorMessages = errors.array().map(err => err.msg).join(", ");
+    return sendResponse(res, 400, false, `Validation failed: ${errorMessages}`);
   }
 
   try {
@@ -67,7 +65,7 @@ exports.login = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    sendResponse(res, 200, true, "Login successful", {
+    return sendResponse(res, 200, true, "Login successful", {
       token,
       user: {
         id: user._id,
@@ -78,10 +76,10 @@ exports.login = async (req, res) => {
     });
   } catch (error) {
     console.error("Login Error:", error);
-    sendResponse(res, 500, false, "Server error");
+    return sendResponse(res, 500, false, "Server error");
   }
 };
 
 exports.logout = async (req, res) => {
-  sendResponse(res, 200, true, "Logout successful");
+  return sendResponse(res, 200, true, "Logout successful");
 };
