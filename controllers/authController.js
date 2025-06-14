@@ -7,7 +7,6 @@ const sendResponse = (res, status, success, message, data = null) => {
 };
 
 exports.register = async (req, res) => {
-  console.log("register is called")
   try {
     const { firstName, lastName, email, password } = req.body;
     console.log("hello this is working")
