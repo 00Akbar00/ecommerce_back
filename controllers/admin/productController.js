@@ -1,10 +1,13 @@
-const mongoose = require('mongoose');
-const Product = require('../models/productModel');
-const ProductImage = require('../models/productImageModel');
-const Category = require('../models/categoryModel');
-const sendResponse = require('../utils/responseHelper');
-const cloudinary = require('cloudinary').v2;
-const { validateImageFile, uploadToCloudinary } = require('../../utils/cloudinary/uploadHelpers');
+const mongoose = require("mongoose");
+const Product = require("../models/productModel");
+const ProductImage = require("../models/productImageModel");
+const Category = require("../models/categoryModel");
+const sendResponse = require("../utils/responseHelper");
+const cloudinary = require("cloudinary").v2;
+const {
+  validateImageFile,
+  uploadToCloudinary,
+} = require("../../utils/cloudinary/uploadHelpers");
 
 /**
  * @desc    Create a new product with main image and optional additional images
@@ -14,21 +17,18 @@ const { validateImageFile, uploadToCloudinary } = require('../../utils/cloudinar
 exports.createProduct = async (req, res) => {
   try {
     const { name, description, price, stock, category_id } = req.body;
-    
+
     // Validate required fields
-    if (!name || !price || !stock || !category_id) {
-      return sendResponse(res, 400, false, 'Name, price, stock, and category are required');
-    }
 
     // Check if category exists
     const categoryExists = await Category.findById(category_id);
     if (!categoryExists) {
-      return sendResponse(res, 404, false, 'Category not found');
+      return sendResponse(res, 404, false, "Category not found");
     }
 
     // Validate and upload main image
     if (!req.files || !req.files.mainImage) {
-      return sendResponse(res, 400, false, 'Main image is required');
+      return sendResponse(res, 400, false, "Main image is required");
     }
 
     const mainImage = req.files.mainImage[0];
@@ -38,7 +38,10 @@ exports.createProduct = async (req, res) => {
     }
 
     // Upload main image to Cloudinary
-    const mainImageResult = await uploadToCloudinary(mainImage, 'products/main');
+    const mainImageResult = await uploadToCloudinary(
+      mainImage,
+      "products/main"
+    );
 
     // Create the product
     const product = new Product({
@@ -47,7 +50,7 @@ exports.createProduct = async (req, res) => {
       price,
       stock,
       category_id,
-      image_url: mainImageResult.secure_url
+      image_url: mainImageResult.secure_url,
     });
 
     const savedProduct = await product.save();
@@ -61,34 +64,34 @@ exports.createProduct = async (req, res) => {
           return null;
         }
 
-        const result = await uploadToCloudinary(image, 'products/additional');
+        const result = await uploadToCloudinary(image, "products/additional");
         return new ProductImage({
           product_id: savedProduct._id,
           url: result.secure_url,
-          alt_text: `${name} - Product Image`
+          alt_text: `${name} - Product Image`,
         });
       });
 
       const productImages = await Promise.all(imageUploadPromises);
-      const filteredImages = productImages.filter(img => img !== null);
+      const filteredImages = productImages.filter((img) => img !== null);
       await ProductImage.insertMany(filteredImages);
     }
 
     // Fetch the product with all its images
-    const productWithImages = await Product.findById(savedProduct._id).populate('category_id').lean();
-    const additionalImages = await ProductImage.find({ product_id: savedProduct._id });
+    const productWithImages = await Product.findById(savedProduct._id)
+      .populate("category_id")
+      .lean();
+    const additionalImages = await ProductImage.find({
+      product_id: savedProduct._id,
+    });
 
-    return sendResponse(
-      res,
-      201,
-      true,
-      'Product created successfully',
-      { ...productWithImages, additional_images: additionalImages }
-    );
-
+    return sendResponse(res, 201, true, "Product created successfully", {
+      ...productWithImages,
+      additional_images: additionalImages,
+    });
   } catch (error) {
-    console.error('Error creating product:', error);
-    return sendResponse(res, 500, false, 'Server error while creating product');
+    console.error("Error creating product:", error);
+    return sendResponse(res, 500, false, "Server error while creating product");
   }
 };
 
@@ -104,20 +107,20 @@ exports.updateProduct = async (req, res) => {
 
     // Validate product ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return sendResponse(res, 400, false, 'Invalid product ID');
+      return sendResponse(res, 400, false, "Invalid product ID");
     }
 
     // Check if product exists
     const product = await Product.findById(id);
     if (!product) {
-      return sendResponse(res, 404, false, 'Product not found');
+      return sendResponse(res, 404, false, "Product not found");
     }
 
     // Check if category exists if it's being updated
     if (category_id) {
       const categoryExists = await Category.findById(category_id);
       if (!categoryExists) {
-        return sendResponse(res, 404, false, 'Category not found');
+        return sendResponse(res, 404, false, "Category not found");
       }
     }
 
@@ -137,7 +140,10 @@ exports.updateProduct = async (req, res) => {
       }
 
       // Upload new main image to Cloudinary
-      const mainImageResult = await uploadToCloudinary(mainImage, 'products/main');
+      const mainImageResult = await uploadToCloudinary(
+        mainImage,
+        "products/main"
+      );
       product.image_url = mainImageResult.secure_url;
     }
 
@@ -147,13 +153,12 @@ exports.updateProduct = async (req, res) => {
       res,
       200,
       true,
-      'Product updated successfully',
+      "Product updated successfully",
       updatedProduct
     );
-
   } catch (error) {
-    console.error('Error updating product:', error);
-    return sendResponse(res, 500, false, 'Server error while updating product');
+    console.error("Error updating product:", error);
+    return sendResponse(res, 500, false, "Server error while updating product");
   }
 };
 
@@ -168,30 +173,30 @@ exports.deleteProduct = async (req, res) => {
 
     // Validate product ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return sendResponse(res, 400, false, 'Invalid product ID');
+      return sendResponse(res, 400, false, "Invalid product ID");
     }
 
     // Check if product exists
     const product = await Product.findById(id);
     if (!product) {
-      return sendResponse(res, 404, false, 'Product not found');
+      return sendResponse(res, 404, false, "Product not found");
     }
 
     // Soft delete by setting isArchived flag
     product.isArchived = true;
     await product.save();
 
+    return sendResponse(res, 200, true, "Product archived successfully", {
+      productId: id,
+    });
+  } catch (error) {
+    console.error("Error archiving product:", error);
     return sendResponse(
       res,
-      200,
-      true,
-      'Product archived successfully',
-      { productId: id }
+      500,
+      false,
+      "Server error while archiving product"
     );
-
-  } catch (error) {
-    console.error('Error archiving product:', error);
-    return sendResponse(res, 500, false, 'Server error while archiving product');
   }
 };
 
@@ -206,18 +211,18 @@ exports.addProductImage = async (req, res) => {
 
     // Validate product ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return sendResponse(res, 400, false, 'Invalid product ID');
+      return sendResponse(res, 400, false, "Invalid product ID");
     }
 
     // Check if product exists
     const product = await Product.findById(id);
     if (!product) {
-      return sendResponse(res, 404, false, 'Product not found');
+      return sendResponse(res, 404, false, "Product not found");
     }
 
     // Check if images were provided
     if (!req.files || req.files.length === 0) {
-      return sendResponse(res, 400, false, 'No images provided');
+      return sendResponse(res, 400, false, "No images provided");
     }
 
     // Process each image
@@ -227,34 +232,34 @@ exports.addProductImage = async (req, res) => {
         return null;
       }
 
-      const result = await uploadToCloudinary(image, 'products/additional');
+      const result = await uploadToCloudinary(image, "products/additional");
       return new ProductImage({
         product_id: id,
         url: result.secure_url,
-        alt_text: `${product.name} - Product Image`
+        alt_text: `${product.name} - Product Image`,
       });
     });
 
     const productImages = await Promise.all(imageUploadPromises);
-    const filteredImages = productImages.filter(img => img !== null);
-    
+    const filteredImages = productImages.filter((img) => img !== null);
+
     if (filteredImages.length === 0) {
-      return sendResponse(res, 400, false, 'No valid images provided');
+      return sendResponse(res, 400, false, "No valid images provided");
     }
 
     await ProductImage.insertMany(filteredImages);
 
+    return sendResponse(res, 201, true, "Images added successfully", {
+      count: filteredImages.length,
+    });
+  } catch (error) {
+    console.error("Error adding product images:", error);
     return sendResponse(
       res,
-      201,
-      true,
-      'Images added successfully',
-      { count: filteredImages.length }
+      500,
+      false,
+      "Server error while adding product images"
     );
-
-  } catch (error) {
-    console.error('Error adding product images:', error);
-    return sendResponse(res, 500, false, 'Server error while adding product images');
   }
 };
 
@@ -269,33 +274,35 @@ exports.deleteProductImage = async (req, res) => {
 
     // Validate image ID
     if (!mongoose.Types.ObjectId.isValid(imageId)) {
-      return sendResponse(res, 400, false, 'Invalid image ID');
+      return sendResponse(res, 400, false, "Invalid image ID");
     }
 
     // Find and delete the image
     const image = await ProductImage.findByIdAndDelete(imageId);
     if (!image) {
-      return sendResponse(res, 404, false, 'Image not found');
+      return sendResponse(res, 404, false, "Image not found");
     }
 
     // Extract public ID from Cloudinary URL for deletion
-    const urlParts = image.url.split('/');
-    const publicIdWithExtension = urlParts.slice(-2).join('/').split('.')[0];
-    const publicId = `products/additional/${publicIdWithExtension.split('/').pop()}`;
+    const urlParts = image.url.split("/");
+    const publicIdWithExtension = urlParts.slice(-2).join("/").split(".")[0];
+    const publicId = `products/additional/${publicIdWithExtension
+      .split("/")
+      .pop()}`;
 
     // Delete image from Cloudinary
     await cloudinary.uploader.destroy(publicId);
 
+    return sendResponse(res, 200, true, "Image deleted successfully", {
+      imageId,
+    });
+  } catch (error) {
+    console.error("Error deleting product image:", error);
     return sendResponse(
       res,
-      200,
-      true,
-      'Image deleted successfully',
-      { imageId }
+      500,
+      false,
+      "Server error while deleting product image"
     );
-
-  } catch (error) {
-    console.error('Error deleting product image:', error);
-    return sendResponse(res, 500, false, 'Server error while deleting product image');
   }
 };
