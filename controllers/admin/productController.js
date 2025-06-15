@@ -4,7 +4,7 @@ const ProductImage = require('../models/productImageModel');
 const Category = require('../models/categoryModel');
 const sendResponse = require('../utils/responseHelper');
 const cloudinary = require('cloudinary').v2;
-const { validateImageFile, uploadToCloudinary } = require('../utils/cloudinary/uploadHelpers');
+const { validateImageFile, uploadToCloudinary } = require('../../utils/cloudinary/uploadHelpers');
 
 /**
  * @desc    Create a new product with main image and optional additional images
