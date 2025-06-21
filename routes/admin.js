@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const productController = require("../../controllers/admin/productController");
-const { createProductValidator, updateProductValidator } = require("../../validators/product.validator");
-const upload = require("../../middlewares/multer.middleware");
+const productController = require("../controllers/admin/productController")
+const { createProductValidator, updateProductValidator } = require("../validators/product.validator");
+const upload = require("../middleware/multer.middleware");
 
 // Create product
 router.post("/products", upload.fields([{ name: "mainImage", maxCount: 1 }, { name: "additionalImages", maxCount: 5 }]), createProductValidator, productController.createProduct);

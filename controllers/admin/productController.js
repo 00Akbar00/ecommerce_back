@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
-const Product = require("../models/productModel");
-const ProductImage = require("../models/productImageModel");
-const Category = require("../models/categoryModel");
-const sendResponse = require("../utils/responseHelper");
+const Product = require("../../models/product");
+const ProductImage = require("../../models/productImage");
+const Category = require("../../models/category");
+const sendResponse = require("../../utils/sendResponse");
 const cloudinary = require("cloudinary").v2;
 const {
   validateImageFile,
